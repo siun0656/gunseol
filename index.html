@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>와장창! 나건설 사장의 건설왕 도전기</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #f59e0b;
+      --primary-dark: #b45309;
+      --civil-color: #2563eb;
+      --arch-color: #ec4899;
+      --bg-dark: #0f172a;
+      --border-pix: 3px solid #1e293b;
+      --shadow-pix: 4px 4px 0px #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Jua', sans-serif;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: #1e293b;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+      overflow-x: hidden;
+    }
+
+    #game-frame {
+      width: 100%;
+      max-width: 860px;
+      height: 94vh;
+      max-height: 720px;
+      background: #f8fafc;
+      border: var(--border-pix);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      border-radius: 14px;
+    }
+
+    #top-hud {
+      height: 52px;
+      background: #fef08a;
+      border-bottom: var(--border-pix);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 15px;
+      z-index: 10;
+    }
+    .hud-chip {
+      background: #fff;
+      border: 2px solid #1e293b;
+      border-radius: 8px;
+      padding: 4px 10px;
+      box-shadow: 2px 2px 0 #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .game-view {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      position: relative;
+      overflow-y: auto;
+      background: #f1f5f9;
+    }
+    .game-view.active { display: flex; }
+
+    #nav-bar {
+      height: 60px;
+      background: #ffffff;
+      border-top: var(--border-pix);
+      display: flex;
+      z-index: 10;
+    }
+    .nav-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      border-right: 1px solid #cbd5e1;
+      font-size: 15px;
+      color: #64748b;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      transition: background 0.1s;
+    }
+    .nav-btn:last-child { border-right: none; }
+    .nav-btn.active {
+      background: #fef3c7;
+      color: #78350f;
+      font-weight: bold;
+    }
+
+    .btn-pix {
+      background: var(--primary);
+      color: #fff;
+      border: var(--border-pix);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 16px;
+      box-shadow: 3px 3px 0 #1e293b;
+      cursor: pointer;
+      transition: transform 0.05s;
+    }
+    .btn-pix:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 #1e293b;
+    }
+
+    /* MODE 1 */
+    #mode1 {
+      padding: 18px;
+      background: linear-gradient(to bottom, #bae6fd, #e0f2fe);
+      justify-content: space-between;
+    }
+    .comic-card {
+      background: #fff;
+      border: var(--border-pix);
+      box-shadow: var(--shadow-pix);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      margin-bottom: 12px;
+    }
+    .comic-header {
+      background: #fef08a;
+      border-bottom: 2px solid #1e293b;
+      padding: 8px 14px;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .comic-visual {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 68px;
+      background: #f8fafc;
+      min-height: 140px;
+    }
+    .comic-text {
+      background: #ffffff;
+      border-top: 2px dashed #94a3b8;
+      padding: 12px 16px;
+      font-size: 15px;
+      line-height: 1.45;
+      color: #334155;
+    }
+    .choice-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .btn-choice {
+      background: #fff;
+      border: var(--border-pix);
+      border-radius: 10px;
+      padding: 12px 14px;
+      text-align: left;
+      font-size: 14px;
+      box-shadow: 3px 3px 0 #1e293b;
+      cursor: pointer;
+      line-height: 1.35;
+    }
+    .btn-choice:hover { background: #fef9c3; }
+
+    #fail-screen {
+      position: absolute;
+      inset: 0;
+      background: rgba(185, 28, 28, 0.95);
+      color: #fff;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      z-index: 100;
+      animation: shake 0.3s;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(-8px, 6px); }
+      75% { transform: translate(8px, -6px); }
+    }
+
+    /* MODE 2 */
+    #mode2 {
+      position: relative;
+      background: #86efac;
+      overflow: hidden;
+    }
+    #town-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .tycoon-hud {
+      position: absolute;
+      top: 10px; left: 10px;
+      background: rgba(255,255,255,0.92);
+      border: 2px solid #1e293b;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      pointer-events: none;
+      box-shadow: 2px 2px 0 #1e293b;
+    }
+    .btn-reset-town {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: #ef4444;
+      color: #fff;
+      border: 2px solid #1e293b;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      box-shadow: 2px 2px 0 #1e293b;
+      z-index: 15;
+    }
+    .btn-reset-town:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 #1e293b;
+    }
+    .tycoon-palette {
+      position: absolute;
+      bottom: 10px; left: 10px; right: 10px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .build-card {
+      background: #fff;
+      border: var(--border-pix);
+      box-shadow: 2px 2px 0 #1e293b;
+      border-radius: 8px;
+      padding: 8px 10px;
+      min-width: 115px;
+      text-align: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .build-card.civil-card { border-color: var(--civil-color); }
+    .build-card.arch-card { border-color: var(--arch-color); }
+    .build-card span { display: block; font-size: 13px; font-weight: bold; }
+    .build-card small { font-size: 11px; color: #64748b; }
+
+    /* MODE 3 */
+    #mode3 {
+      background: #0284c7;
+      position: relative;
+      overflow: hidden;
+    }
+    #arcade-top-hud {
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      color: #fff;
+      font-size: 16px;
+      z-index: 10;
+    }
+    #arcade-card {
+      position: absolute;
+      width: 170px;
+      background: #fff;
+      border: var(--border-pix);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.3);
+      border-radius: 12px;
+      text-align: center;
+      padding: 12px;
+      left: calc(50% - 85px);
+      top: 30px;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .basket-group {
+      position: absolute;
+      bottom: 12px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 10;
+    }
+    .basket-target {
+      width: 48%;
+      height: 94px;
+      border: var(--border-pix);
+      border-radius: 12px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      box-shadow: var(--shadow-pix);
+      cursor: pointer;
+    }
+    .basket-arch { background: var(--arch-color); }
+    .basket-civil { background: var(--civil-color); }
+
+    #error-flash-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(220, 38, 38, 0.85);
+      color: #ffffff;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 80;
+      pointer-events: none;
+    }
+    #error-flash-overlay .x-mark {
+      font-size: 96px;
+      text-shadow: 4px 4px 0 #000;
+      animation: popX 0.25s forwards;
+    }
+    #error-flash-overlay .penalty-text {
+      font-size: 26px;
+      color: #fef08a;
+      text-shadow: 2px 2px 0 #000;
+    }
+    @keyframes popX {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* =========================================================
+       MODE 4: 교과서 완벽 반영 배움공책 스타일
+    ========================================================= */
+    #mode4 {
+      padding: 16px;
+      background: #fffdf0;
+    }
+    .note-card {
+      background: #fff;
+      border: var(--border-pix);
+      box-shadow: var(--shadow-pix);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .note-header-badge {
+      display: inline-block;
+      background: #fef08a;
+      border: 2px solid #1e293b;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .concept-box {
+      background: #f8fafc;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* 5대 특성 스탬프 랙 */
+    .stamp-rack {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .stamp-slot {
+      border: 2px dashed #94a3b8;
+      border-radius: 10px;
+      padding: 10px 6px;
+      text-align: center;
+      background: #f8fafc;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .stamp-slot.unlocked {
+      border: 2px solid #10b981;
+      background: #ecfdf5;
+      color: #065f46;
+      font-weight: bold;
+    }
+    .trait-desc-list {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .trait-item {
+      background: #fefce8;
+      border-left: 4px solid #f59e0b;
+      padding: 6px 10px;
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* 비교표 */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    .compare-table th, .compare-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px;
+      text-align: left;
+      line-height: 1.45;
+    }
+    .compare-table th {
+      background: #fef08a;
+      text-align: center;
+    }
+
+    .modal-cover {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 120;
+      padding: 16px;
+    }
+    .modal-body {
+      background: #fff;
+      border: var(--border-pix);
+      box-shadow: var(--shadow-pix);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      #game-frame { border: none; box-shadow: none; height: auto; max-height: none; }
+      #top-hud, #nav-bar, .modal-cover, #fail-screen, #error-flash-overlay, .btn-print-hide { display: none !important; }
+      .game-view { display: none !important; }
+      #mode4 { display: block !important; padding: 0; background: #fff; }
+      .note-card { box-shadow: none; border: 1px solid #333; margin-bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-frame">
+  <!-- 상단 HUD -->
+  <header id="top-hud">
+    <div class="hud-chip">
+      <span>👑</span>
+      <span id="player-title">초보 건설인</span>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <div class="hud-chip">
+        <span>💰</span>
+        <span id="gold-val">300</span>G
+      </div>
+      <div class="hud-chip">
+        <span>📜 진도</span>
+        <span id="progress-val">0%</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 1. 막장 스토리 모드 -->
+  <section id="mode1" class="game-view active">
+    <div class="comic-card">
+      <div class="comic-header">
+        <span id="story-ep-num">에피소드 1 / 5</span>
+        <span id="story-ep-tag" style="color: #b45309;">건설 기술의 특성</span>
+      </div>
+      <div class="comic-visual" id="story-visual">📐🏢</div>
+      <div class="comic-text" id="story-desc">상황 대사 로딩 중...</div>
+    </div>
+    <div class="choice-group" id="story-choice-container"></div>
+  </section>
+
+  <!-- 2. 마이타운 타이쿤 -->
+  <section id="mode2" class="game-view">
+    <canvas id="town-canvas"></canvas>
+    <div class="tycoon-hud">💡 공사비를 지출하여 인프라를 건설하고 마을을 완성하세요!</div>
+    <button class="btn-reset-town" onclick="confirmResetTown()">🔄 마을 초기화</button>
+    
+    <div class="tycoon-palette">
+      <div class="build-card civil-card" onclick="openCivilMinigame('bridge')">
+        <span>🌉 다리 놓기</span>
+        <small>토목 (비용 100G | <span id="cnt-bridge">0</span>개)</small>
+      </div>
+      <div class="build-card civil-card" onclick="openCivilMinigame('road')">
+        <span>🚜 도로 포장</span>
+        <small>토목 (비용 60G | <span id="cnt-road">0</span>개)</small>
+      </div>
+      <div class="build-card civil-card" onclick="openCivilMinigame('dam')">
+        <span>🌊 댐 건설</span>
+        <small>토목 (비용 180G | <span id="cnt-dam">0</span>개)</small>
+      </div>
+      <div class="build-card civil-card" onclick="openCivilMinigame('rail')">
+        <span>🚆 철도 부설</span>
+        <small>토목 (비용 120G | <span id="cnt-rail">0</span>개)</small>
+      </div>
+      <div class="build-card civil-card" onclick="openCivilMinigame('tunnel')">
+        <span>🚇 터널 굴착</span>
+        <small>토목 (비용 150G | <span id="cnt-tunnel">0</span>개)</small>
+      </div>
+
+      <div class="build-card arch-card" onclick="openArchCustomizer('apart')">
+        <span>🏢 아파트</span>
+        <small>건축 (거주 공간, 150G)</small>
+      </div>
+      <div class="build-card arch-card" onclick="openArchCustomizer('house')">
+        <span>🏡 단독 주택</span>
+        <small>건축 (생활 공간, 90G)</small>
+      </div>
+      <div class="build-card arch-card" onclick="openArchCustomizer('stadium')">
+        <span>🏟️ 경기장</span>
+        <small>건축 (체육 활동, 200G)</small>
+      </div>
+      <div class="build-card arch-card" onclick="openArchCustomizer('school')">
+        <span>🏫 초등학교</span>
+        <small>건축 (배움 공간, 120G)</small>
+      </div>
+      <div class="build-card arch-card" onclick="openArchCustomizer('factory')">
+        <span>🏭 산업 공장</span>
+        <small>건축 (생산 공간, 130G)</small>
+      </div>
+      <div class="build-card arch-card" onclick="openArchCustomizer('hospital')">
+        <span>🏥 종합 병원</span>
+        <small>건축 (의료 공간, 140G)</small>
+      </div>
+      <div class="build-card arch-card" onclick="openArchCustomizer('shop')">
+        <span>🏪 편의 상점</span>
+        <small>건축 (상업 공간, 80G)</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 아케이드 분류 퀴즈 -->
+  <section id="mode3" class="game-view">
+    <div id="arcade-top-hud">
+      <div>⏳ 시간: <span id="arcade-time">60</span>s</div>
+      <div>🔥 콤보: <span id="arcade-combo">0</span>!</div>
+      <div>🏆 점수: <span id="arcade-score">0</span></div>
+    </div>
+
+    <div id="arcade-card">
+      <div style="font-size: 26px;">🪂</div>
+      <div id="arcade-card-icon" style="font-size: 34px;">🏢</div>
+      <div id="arcade-card-name" style="font-weight: bold; margin-top: 4px; font-size:16px;">아파트</div>
+    </div>
+
+    <div class="basket-group">
+      <button class="basket-target basket-arch" onclick="sortCard('arch')">
+        <span>🏠 건축 구조물</span>
+        <small>(사람 거주/활동 공간)</small>
+        <span style="font-size: 11px; margin-top: 4px;">[← / A키 / 터치]</span>
+      </button>
+      <button class="basket-target basket-civil" onclick="sortCard('civil')">
+        <span>🌉 토목 구조물</span>
+        <small>(자연변화/자원이용 기반)</small>
+        <span style="font-size: 11px; margin-top: 4px;">[→ / D키 / 터치]</span>
+      </button>
+    </div>
+
+    <div id="error-flash-overlay">
+      <div class="x-mark">❌</div>
+      <div class="penalty-text">삐-! 오답! (-100점)</div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       4. 디지털 스탬프 북 (교과서 정리장 양식 3단계 완벽 수록)
+       ========================================================================= -->
+  <section id="mode4" class="game-view">
+    
+    <!-- 1. 건설 기술이란? -->
+    <div class="note-card">
+      <span class="note-header-badge">📖 1. 건설 기술이란?</span>
+      <div class="concept-box">
+        • <strong>건설 기술의 정의:</strong> 인간이 살아가기 위해 필요한 <strong>여러 가지 시설이나 구조물을 만드는 기술</strong>입니다.<br>
+        • <strong>발전 배경:</strong> 동물이나 적으로부터 인간을 보호하고, 비나 태풍 같은 자연의 변화에 적응하기 위해 집을 지으며 시작되었습니다.<br>
+        • <strong>건설 기술의 두 바퀴:</strong><br>
+        &nbsp;&nbsp;🏠 <strong>건축 기술:</strong> 인간이 쾌적하고 안전하게 생활하기 위한 집, 상점, 학교, 병원, 도서관 등을 건설하는 기술<br>
+        &nbsp;&nbsp;🌉 <strong>토목 기술:</strong> 자연환경을 변화시켜 인간이 생활하는 데 필요한 도로, 댐, 항만 등을 건설하는 기술
+      </div>
+    </div>
+
+    <!-- 2. 건설 기술의 5가지 핵심 특징 -->
+    <div class="note-card">
+      <span class="note-header-badge">🏆 2. 건설 기술의 특징 (교과서 핵심 말풍선 5개)</span>
+      <p style="font-size: 12px; color: #64748b; margin-bottom: 6px;">
+        모드 1 스토리를 통과하여 5대 지식 스탬프를 활성화해보세요!
+      </p>
+
+      <!-- 스탬프 랙 -->
+      <div class="stamp-rack">
+        <div class="stamp-slot" id="stamp-0">특성 1<br><strong>정확한 설계</strong><br>(변경 불가)</div>
+        <div class="stamp-slot" id="stamp-1">특성 2<br><strong>많은 사람 혜택</strong><br>(공공성)</div>
+        <div class="stamp-slot" id="stamp-2">특성 3<br><strong>오랜 시간 사용</strong><br>(내구성)</div>
+        <div class="stamp-slot" id="stamp-3">특성 4<br><strong>환경 영향 검토</strong><br>(사전 검토)</div>
+        <div class="stamp-slot" id="stamp-4">특성 5<br><strong>지역·문화 고려</strong><br>(자연 적응)</div>
+      </div>
+
+      <!-- 교과서 말풍선 문구 정리 -->
+      <div class="trait-desc-list">
+        <div class="trait-item">
+          <strong>① 변경 불가성 & 정확성:</strong> "완성하면 변경하기 어려우므로 정확하게 설계해야 합니다." (막대한 비용 소모 예방)
+        </div>
+        <div class="trait-item">
+          <strong>② 공공성 & 사회성:</strong> "많은 사람이 혜택을 받습니다." (특정 개인의 독점이 아닌 사회 구성원 전체의 편익)
+        </div>
+        <div class="trait-item">
+          <strong>③ 장기성 & 내구성:</strong> "오랜 시간 동안 사용합니다." (수십~수백 년간 태풍과 지진을 견디며 안전 유지)
+        </div>
+        <div class="trait-item">
+          <strong>④ 환경 영향 사전 검토:</strong> "건설하기 전에 환경에 미치는 영향 등을 충분히 검토합니다." (생태계 보존과 상생)
+        </div>
+        <div class="trait-item">
+          <strong>⑤ 지역성과 문화적 반영:</strong> "지역의 문화, 자연환경 등을 고려합니다." (그 지역의 기후와 지형, 전통 생활 양식 반영)
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 토목 구조물과 건축 구조물이란? + 예시 -->
+    <div class="note-card">
+      <span class="note-header-badge">🔍 3. 토목 구조물과 건축 구조물이란? + 교과서 예시</span>
+      <p style="font-size: 13px; color: #475569; margin: 4px 0 10px 0;">
+        💡 <strong>구조물이란?</strong> 설계에 따라 여러 재료를 활용하여 만든 물건입니다.
+      </p>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">구분</th>
+            <th style="width: 40%; color: #db2777;">🏠 건축 구조물 (Architecture)</th>
+            <th style="width: 40%; color: #2563eb;">🌉 토목 구조물 (Civil)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>교과서 정의</strong></td>
+            <td><strong>생활 공간을 쾌적하고 안전하게 사용하기 위해</strong> 만든 구조물</td>
+            <td><strong>자연환경을 변화시켜 자원을 이용하기 위해</strong> 지은 구조물</td>
+          </tr>
+          <tr>
+            <td><strong>핵심 목적</strong></td>
+            <td>사람들이 들어가서 <strong>살거나 활동(공부, 치료, 일, 경기)</strong>하는 공간</td>
+            <td>자연을 이용하거나 길을 내어 편리한 <strong>생활 기반(인프라)</strong>을 다지는 시설</td>
+          </tr>
+          <tr>
+            <td><strong>교과서 수록<br>대표 예시</strong></td>
+            <td>
+              • <strong>주거:</strong> 집(단독 주택), 아파트<br>
+              • <strong>생활·상업:</strong> 상점(마트/편의점)<br>
+              • <strong>생산:</strong> 공장<br>
+              • <strong>교육·의료:</strong> 학교, 병원, 도서관<br>
+              • <strong>체육:</strong> 경기장
+            </td>
+            <td>
+              • <strong>교통:</strong> 도로, 철도(기찻길), 다리(교량), 터널<br>
+              • <strong>해양·물류:</strong> 항만(항구)<br>
+              • <strong>자원·환경:</strong> 댐(수력발전), 상하수도
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <button class="btn-pix btn-print-hide" style="width: 100%; margin-top: 14px; background: #2563eb;" onclick="window.print()">
+        🖨️ 배움 공책 인쇄 / PDF 과제 제출하기
+      </button>
+    </div>
+  </section>
+
+  <!-- 하단 탭 내비게이션 -->
+  <nav id="nav-bar">
+    <button class="nav-btn active" onclick="changeMode('mode1')">
+      <span>📖</span>
+      <span>1. 스토리</span>
+    </button>
+    <button class="nav-btn" onclick="changeMode('mode2')">
+      <span>🏗️</span>
+      <span>2. 마이타운</span>
+    </button>
+    <button class="nav-btn" onclick="changeMode('mode3')">
+      <span>⚡</span>
+      <span>3. 분류퀴즈</span>
+    </button>
+    <button class="nav-btn" onclick="changeMode('mode4')">
+      <span>📓</span>
+      <span>4. 배움공책</span>
+    </button>
+  </nav>
+
+  <!-- 부실공사 FAIL 화면 -->
+  <div id="fail-screen">
+    <div style="font-size: 58px;" id="fail-icon">💥🏢</div>
+    <h2 id="fail-title" style="margin-top: 10px; font-size: 22px;">부실공사 붕괴!</h2>
+    <p id="fail-desc" style="margin: 12px 0; max-width: 440px; font-size: 15px; line-height: 1.45;"></p>
+    <button class="btn-pix" style="background:#fff; color:#b91c1c;" onclick="retryStory()">다시 시도하기 ↺</button>
+  </div>
+
+  <!-- 공통 팝업 모달 -->
+  <div id="action-modal" class="modal-cover">
+    <div class="modal-body" id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   1. SOUND ENGINE (Web Audio API 신디사이저)
+   ========================================================================= */
+const Sound = {
+  ctx: null,
+  init() {
+    if (!this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  },
+  tone(freq, type, duration, vol = 0.2) {
+    try {
+      this.init();
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + duration);
+    } catch(e) {}
+  },
+  pop() { this.tone(480, 'sine', 0.08, 0.15); },
+  correct() {
+    this.tone(523, 'triangle', 0.1, 0.2);
+    setTimeout(() => this.tone(659, 'triangle', 0.1, 0.2), 70);
+    setTimeout(() => this.tone(784, 'triangle', 0.15, 0.2), 140);
+  },
+  buzzer() { this.tone(150, 'sawtooth', 0.35, 0.35); },
+  collapse() {
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => this.tone(80 + Math.random() * 140, 'sawtooth', 0.22, 0.3), i * 50);
+    }
+  }
+};
+
+/* =========================================================================
+   2. 전역 상태 및 토목 공사비 정의
+   ========================================================================= */
+const CIVIL_META = {
+  bridge: { key: 'bridges', name: '다리(교량)', cost: 100 },
+  road:   { key: 'roads',   name: '도로',       cost: 60 },
+  dam:    { key: 'dams',    name: '수력 댐',    cost: 180 },
+  rail:   { key: 'rails',   name: '철도 선로',  cost: 120 },
+  tunnel: { key: 'tunnels', name: '터널',       cost: 150 }
+};
+
+let gameState = {
+  gold: 300,
+  stamps: [false, false, false, false, false],
+  town: {
+    bridges: 0,
+    roads: 0,
+    dams: 0,
+    rails: 0,
+    tunnels: 0,
+    buildings: []
+  }
+};
+
+function saveState() {
+  localStorage.setItem('CONSTRUCTION_MASTER_V7_NOTEBOOK_PERFECT', JSON.stringify(gameState));
+  updateHUD();
+}
+
+function loadState() {
+  const saved = localStorage.getItem('CONSTRUCTION_MASTER_V7_NOTEBOOK_PERFECT') || 
+                localStorage.getItem('CONSTRUCTION_MASTER_V6_COST_FIXED') ||
+                localStorage.getItem('CONSTRUCTION_MASTER_V5_PERFECT');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      gameState = Object.assign(gameState, parsed);
+      if (typeof gameState.town.bridges === 'undefined') {
+        gameState.town = {
+          bridges: parsed.town.bridge ? 1 : 0,
+          roads: parsed.town.road ? 1 : 0,
+          dams: parsed.town.dam ? 1 : 0,
+          rails: 0,
+          tunnels: 0,
+          buildings: parsed.town.buildings || []
+        };
+      }
+    } catch(e) {}
+  }
+  updateHUD();
+}
+
+function updateHUD() {
+  document.getElementById('gold-val').innerText = gameState.gold;
+  const stampsEarned = gameState.stamps.filter(Boolean).length;
+  const progress = Math.min(100, Math.round((stampsEarned / 5) * 100));
+  document.getElementById('progress-val').innerText = progress + '%';
+
+  const totalCivil = (gameState.town.bridges || 0) + (gameState.town.roads || 0) + 
+                     (gameState.town.dams || 0) + (gameState.town.rails || 0) + (gameState.town.tunnels || 0);
+
+  const titleEl = document.getElementById('player-title');
+  if (progress >= 100 && totalCivil >= 3 && gameState.town.buildings.length >= 3) {
+    titleEl.innerText = "전설의 건설왕 👑";
+  } else if (progress >= 60) {
+    titleEl.innerText = "총괄 감리소장 📐";
+  } else if (progress >= 20) {
+    titleEl.innerText = "기초 시공기사 🔨";
+  } else {
+    titleEl.innerText = "초보 건설인";
+  }
+
+  // 모드 4 스탬프 랙 언락 반영
+  gameState.stamps.forEach((val, idx) => {
+    const el = document.getElementById(`stamp-${idx}`);
+    if (el && val) el.classList.add('unlocked');
+  });
+
+  document.getElementById('cnt-bridge').innerText = gameState.town.bridges || 0;
+  document.getElementById('cnt-road').innerText = gameState.town.roads || 0;
+  document.getElementById('cnt-dam').innerText = gameState.town.dams || 0;
+  document.getElementById('cnt-rail').innerText = gameState.town.rails || 0;
+  document.getElementById('cnt-tunnel').innerText = gameState.town.tunnels || 0;
+}
+
+function changeMode(modeId) {
+  Sound.pop();
+  document.querySelectorAll('.game-view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+  document.getElementById(modeId).classList.add('active');
+  const modes = ['mode1', 'mode2', 'mode3', 'mode4'];
+  const idx = modes.indexOf(modeId);
+  if (idx !== -1) document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+
+  if (modeId === 'mode2') renderTown();
+  if (modeId === 'mode3') {
+    if (!arcadeRunning) startArcadeGame();
+  } else {
+    stopArcadeGame();
+  }
+}
+
+/* =========================================================================
+   3. MODE 1: 스토리 모드 (정답 무작위 셔플)
+   ========================================================================= */
+const STORY_DATA = [
+  {
+    tag: "특성 ① : 완성하면 변경하기 어려우므로 정확하게 설계",
+    visual: "📐🏢",
+    desc: "사장 나건설: 첫 프로젝트로 30층 아파트를 짓는다! 그런데 소장이 도면 치수 계산이 5cm 틀렸다네? 콘크리트 부어버리면 아무도 모르는데 그냥 감으로 대충 올릴까?",
+    choices: [
+      {
+        text: "치수 계산이 귀찮으니 대충 감으로 철근을 배치해 속도를 낸다!",
+        correct: false,
+        failTitle: "피사의 사탑 패러디?! 건물이 15도 기울어 붕괴!",
+        failDesc: "[교과서 말풍선 특성: 변경 불가성] 건설 구조물은 한 번 완공되면 고치거나 해체하기가 극도로 어렵고 막대한 비용이 듭니다. 도면대로 정밀하게 시공해야 합니다!"
+      },
+      {
+        text: "안전이 우선! 공사를 멈추고 설계도대로 1mm의 오차도 없이 다시 정밀 계산한다.",
+        correct: true
+      },
+      {
+        text: "나중에 건물 기울어지면 지우개로 지우듯 깎아내면 된다고 우긴다.",
+        correct: false,
+        failTitle: "감리단 적발 및 영업 정지 처분!",
+        failDesc: "[특성: 정확성] 건설 구조물은 지우개로 지울 수 없습니다! 초기 시공 정밀성이 생명입니다."
+      }
+    ]
+  },
+  {
+    tag: "특성 ② : 많은 사람이 혜택을 받음 (공공성)",
+    visual: "🌉😡",
+    desc: "사장 나건설: 마을 큰 강 위에 대형 다리를 수주했다. '내 회사 돈 들여 지었으니 나만 전용 전동 킥보드 도로로 쓰고 일반 주민은 통행료 1억 원을 받아야지!'",
+    choices: [
+      {
+        text: "시민들과 차량이 모두 편리하고 안전하게 통행할 수 있도록 전면 개방한다.",
+        correct: true
+      },
+      {
+        text: "다리 입구에 철조망을 치고 사장 전용 자전거 도로로 독점한다!",
+        correct: false,
+        failTitle: "마을 주민 대폭동 및 시청 공사 취소 통보!",
+        failDesc: "[교과서 말풍선 특성: 많은 사람의 혜택] 교량, 도로 등 건설 기술은 소수 개인이 독점하는 것이 아니라 사회 대다수 구성원의 편익과 공공의 복지를 증진해야 합니다!"
+      },
+      {
+        text: "비싼 요금을 내는 사람만 지나다닐 수 있는 황금 VIP 다리로 만든다.",
+        correct: false,
+        failTitle: "시민단체 고발 및 감사원 감사 착수!",
+        failDesc: "[특성: 공공성] 공공 인프라는 모든 시민에게 보편적인 이동의 자유를 보장해야 합니다."
+      }
+    ]
+  },
+  {
+    tag: "특성 ③ : 오랜 시간 동안 사용 (내구성)",
+    visual: "🐺🏚️",
+    desc: "사장 나건설: 주택 건설 의뢰가 들어왔다. 원가를 90% 줄여서 볏짚과 얇은 합판으로 아기돼지 삼형제 스타일로 지어볼까?",
+    choices: [
+      {
+        text: "어차피 겉에 페인트칠하면 모르니 볏짚과 골판지 상자로 벽을 채운다.",
+        correct: false,
+        failTitle: "늑대의 입바람 한 방에 집이 통째로 날아감!",
+        failDesc: "[교과서 말풍선 특성: 오랜 시간 사용] 주택은 수십 년 이상 비바람과 태풍, 지진을 견뎌야 합니다. 볏짚으로는 가족의 안전을 지킬 수 없습니다!"
+      },
+      {
+        text: "철근 콘크리트와 내구성이 검증된 단열·방수 정품 자재로 튼튼하게 시공한다.",
+        correct: true
+      },
+      {
+        text: "기둥은 나무젓가락을 모아 접착제로 붙여서 원가를 절감한다.",
+        correct: false,
+        failTitle: "입주 첫날 기둥 두 동강 와르르 붕괴!",
+        failDesc: "[특성: 안전성/내구성] 하중을 버티는 구조재는 반드시 엄격한 안전 규격 자재를 사용해야 합니다."
+      }
+    ]
+  },
+  {
+    tag: "특성 ④ : 건설하기 전에 환경에 미치는 영향 충분히 검토",
+    visual: "🏞️🏭",
+    desc: "사장 나건설: 청정 1급수 호수 옆에 공장을 짓는다. 정화 장치를 설치하면 5천만 원이 드는데, 그냥 밤에 몰래 호수로 폐수를 흘려보낼까?",
+    choices: [
+      {
+        text: "정화 장치는 돈 낭비! 호수로 하수 파이프를 직통으로 꽂아 방류한다.",
+        correct: false,
+        failTitle: "돌연변이 괴물 메기 출현 및 공장 습격!",
+        failDesc: "[교과서 말풍선 특성: 환경 영향 검토] 건설 활동은 자연과 생태계에 지대한 영향을 미칩니다. 사전 환경영향평가와 완벽한 정화 설비는 의무입니다!"
+      },
+      {
+        text: "폐수를 흙 속에 몰래 묻어 덮어버린다.",
+        correct: false,
+        failTitle: "지하수 전면 오염으로 주민 집단 발병!",
+        failDesc: "[특성: 환경 검토] 토양과 지하수 오염은 되돌릴 수 없는 자연재해를 낳습니다."
+      },
+      {
+        text: "사전 환경영향평가를 거치고 최신 친환경 폐수 정화 시설을 설치한다.",
+        correct: true
+      }
+    ]
+  },
+  {
+    tag: "특성 ⑤ : 지역의 문화, 자연환경 등 고려",
+    visual: "❄️🏡",
+    desc: "사장 나건설: 영하 30도 혹한의 눈마을에 주택을 짓는다. 바닥 난방(온돌)은 빼버리고, 힙하게 하와이풍 야외 통유리 얼음 수영장을 지어줄까?",
+    choices: [
+      {
+        text: "겨울 마을의 기후 특성에 맞춰 두터운 단열재와 따뜻한 온수 온돌 난방을 설계한다.",
+        correct: true
+      },
+      {
+        text: "멋이 최고! 난방 없이 통유리 얼음집으로 시원하게 짓는다.",
+        correct: false,
+        failTitle: "입주민 전체 냉동인간화 및 배관 동파 대폭발!",
+        failDesc: "[교과서 말풍선 특성: 지역과 문화 고려] 건설 기술은 그 지역의 기후 조건, 지형, 사람들의 전통 생활 양식(온돌 등)을 반드시 반영해야 합니다!"
+      },
+      {
+        text: "눈이 쌓이지 않게 지붕 대신 평평한 유리 천장판을 얹는다.",
+        correct: false,
+        failTitle: "폭설 무게를 이기지 못하고 지붕 압사 붕괴!",
+        failDesc: "[특성: 자연환경 적응] 눈이 많은 지역은 눈이 미끄러져 내리도록 경사가 급한 박공지붕을 지어야 합니다."
+      }
+    ]
+  }
+];
+
+let curStoryIndex = 0;
+
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function renderStory() {
+  const data = STORY_DATA[curStoryIndex];
+  document.getElementById('story-ep-num').innerText = `에피소드 ${curStoryIndex + 1} / 5`;
+  document.getElementById('story-ep-tag').innerText = data.tag;
+  document.getElementById('story-visual').innerText = data.visual;
+  document.getElementById('story-desc').innerText = data.desc;
+
+  const container = document.getElementById('story-choice-container');
+  container.innerHTML = '';
+
+  const shuffledChoices = shuffleArray(data.choices);
+  shuffledChoices.forEach((ch, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-choice';
+    btn.innerText = `${String.fromCharCode(65 + idx)}. ${ch.text}`;
+    btn.onclick = () => handleStoryChoice(ch);
+    container.appendChild(btn);
+  });
+}
+
+function handleStoryChoice(choice) {
+  if (choice.correct) {
+    Sound.correct();
+    gameState.stamps[curStoryIndex] = true;
+    gameState.gold += 100;
+    saveState();
+    alert("🎉 정답입니다! (+100G 획득)\n올바른 건설 기술 원칙을 준수했습니다.");
+
+    curStoryIndex++;
+    if (curStoryIndex >= STORY_DATA.length) {
+      curStoryIndex = 0;
+      alert("🏆 축하합니다! 5대 건설 특성을 모두 정복하여 [황금 망치] 칭호를 획득했습니다!\n마이타운을 번영시켜보세요!");
+      changeMode('mode2');
+    } else {
+      renderStory();
+    }
+  } else {
+    Sound.collapse();
+    document.getElementById('fail-title').innerText = choice.failTitle;
+    document.getElementById('fail-desc').innerText = choice.failDesc;
+    document.getElementById('fail-screen').style.display = 'flex';
+  }
+}
+
+function retryStory() {
+  Sound.pop();
+  document.getElementById('fail-screen').style.display = 'none';
+  renderStory();
+}
+
+/* =========================================================================
+   4. MODE 2: 타이쿤 타운
+   ========================================================================= */
+const tCanvas = document.getElementById('town-canvas');
+const tCtx = tCanvas.getContext('2d');
+
+let npcs = [
+  { x: 180, y: 220, vx: 0.5, msg: "다리가 생겨서 건너기 넘 편해요!" },
+  { x: 300, y: 250, vx: -0.6, msg: "도로가 매끄러워 킥보드 쌩쌩~" },
+  { x: 420, y: 220, vx: 0.4, msg: "철도랑 터널 덕분에 이동이 최고!" }
+];
+
+function resizeTown() {
+  tCanvas.width = tCanvas.clientWidth;
+  tCanvas.height = tCanvas.clientHeight;
+}
+window.addEventListener('resize', resizeTown);
+
+function confirmResetTown() {
+  Sound.buzzer();
+  if (confirm("⚠️ 정말로 마이타운을 초기화하시겠습니까?\n모든 토목 구조물과 건축물이 철거되며 백지에서 다시 시작합니다. (골드는 보존됩니다)")) {
+    gameState.town = {
+      bridges: 0,
+      roads: 0,
+      dams: 0,
+      rails: 0,
+      tunnels: 0,
+      buildings: []
+    };
+    saveState();
+    Sound.collapse();
+    alert("마을이 깨끗하게 초기화되었습니다! 새로운 도시를 계획해보세요.");
+    renderTown();
+  }
+}
+
+function renderTown() {
+  resizeTown();
+  if (!tCtx) return;
+  tCtx.clearRect(0, 0, tCanvas.width, tCanvas.height);
+
+  tCtx.fillStyle = "#38bdf8";
+  tCtx.fillRect(0, 0, tCanvas.width, 160);
+  tCtx.fillStyle = "#facc15";
+  tCtx.beginPath();
+  tCtx.arc(tCanvas.width - 60, 50, 24, 0, Math.PI*2);
+  tCtx.fill();
+
+  tCtx.fillStyle = "#0284c7";
+  tCtx.fillRect(0, 160, 130, tCanvas.height - 160);
+
+  tCtx.fillStyle = "#86efac";
+  tCtx.fillRect(130, 160, tCanvas.width - 130, tCanvas.height - 160);
+
+  // [토목 - 댐]
+  for (let i = 0; i < (gameState.town.dams || 0); i++) {
+    const dy = 165 + i * 45;
+    if (dy < tCanvas.height - 40) {
+      tCtx.fillStyle = "#475569";
+      tCtx.fillRect(10, dy, 110, 36);
+      tCtx.fillStyle = "#334155";
+      tCtx.fillRect(40, dy + 10, 50, 26);
+      tCtx.fillStyle = "#fff";
+      tCtx.font = "11px Jua";
+      tCtx.fillText(`🧱 댐 #${i+1}`, 22, dy + 22);
+    }
+  }
+
+  // [토목 - 다리]
+  for (let i = 0; i < (gameState.town.bridges || 0); i++) {
+    const by = 260 + i * 35;
+    if (by < tCanvas.height - 30) {
+      tCtx.fillStyle = "#b45309";
+      tCtx.fillRect(95, by, 70, 22);
+      tCtx.fillStyle = "#fef08a";
+      tCtx.fillRect(110, by - 6, 6, 34);
+      tCtx.fillRect(145, by - 6, 6, 34);
+      tCtx.fillStyle = "#fff";
+      tCtx.font = "10px Jua";
+      tCtx.fillText(`🌉 대교${i+1}`, 115, by + 15);
+    }
+  }
+
+  // [토목 - 도로]
+  for (let i = 0; i < (gameState.town.roads || 0); i++) {
+    const ry = 300 + i * 26;
+    if (ry < tCanvas.height - 20) {
+      tCtx.fillStyle = "#334155";
+      tCtx.fillRect(130, ry, tCanvas.width - 130, 20);
+      tCtx.strokeStyle = "#fef08a";
+      tCtx.lineWidth = 2;
+      tCtx.setLineDash([8, 8]);
+      tCtx.beginPath();
+      tCtx.moveTo(130, ry + 10);
+      tCtx.lineTo(tCanvas.width, ry + 10);
+      tCtx.stroke();
+      tCtx.setLineDash([]);
+    }
+  }
+
+  // [토목 - 철도]
+  for (let i = 0; i < (gameState.town.rails || 0); i++) {
+    const rly = 240 + i * 20;
+    tCtx.fillStyle = "#78350f";
+    tCtx.fillRect(130, rly, tCanvas.width - 130, 6);
+    tCtx.fillStyle = "#451a03";
+    for (let rx = 135; rx < tCanvas.width; rx += 14) {
+      tCtx.fillRect(rx, rly - 3, 4, 12);
+    }
+  }
+
+  // [토목 - 터널]
+  for (let i = 0; i < (gameState.town.tunnels || 0); i++) {
+    const tx = tCanvas.width - 90 - i * 65;
+    tCtx.fillStyle = "#1e293b";
+    tCtx.beginPath();
+    tCtx.arc(tx + 25, 200, 25, Math.PI, 0);
+    tCtx.fill();
+    tCtx.fillStyle = "#cbd5e1";
+    tCtx.font = "10px Jua";
+    tCtx.fillText("🚇 터널", tx + 8, 195);
+  }
+
+  // 건축 구조물들
+  gameState.town.buildings.forEach((b, i) => {
+    const bx = 160 + (i % 4) * 95;
+    const by = 175 + Math.floor(i / 4) * 75;
+
+    tCtx.fillStyle = b.wallColor || "#ffffff";
+    tCtx.fillRect(bx, by, 70, 50);
+    tCtx.strokeStyle = "#1e293b";
+    tCtx.lineWidth = 2;
+    tCtx.strokeRect(bx, by, 70, 50);
+
+    tCtx.fillStyle = b.roofColor || "#ef4444";
+    tCtx.beginPath();
+    if (b.roofShape === 'arch') {
+      tCtx.arc(bx + 35, by, 35, Math.PI, 0);
+    } else if (b.roofShape === 'dome') {
+      tCtx.ellipse(bx + 35, by, 35, 18, 0, Math.PI, 0);
+    } else {
+      tCtx.moveTo(bx - 4, by);
+      tCtx.lineTo(bx + 35, by - 22);
+      tCtx.lineTo(bx + 74, by);
+    }
+    tCtx.fill();
+    tCtx.stroke();
+
+    tCtx.fillStyle = "#0f172a";
+    tCtx.font = "11px Jua";
+    tCtx.fillText(b.name, bx + 6, by + 30);
+  });
+
+  // 주민 NPC
+  npcs.forEach(n => {
+    n.x += n.vx;
+    if (n.x < 140 || n.x > tCanvas.width - 50) n.vx *= -1;
+
+    tCtx.font = "18px Jua";
+    tCtx.fillText("🚶", n.x, n.y);
+
+    tCtx.fillStyle = "#ffffff";
+    tCtx.fillRect(n.x - 30, n.y - 30, 120, 18);
+    tCtx.strokeStyle = "#000";
+    tCtx.strokeRect(n.x - 30, n.y - 30, 120, 18);
+    tCtx.fillStyle = "#000";
+    tCtx.font = "10px Jua";
+    tCtx.fillText(n.msg, n.x - 26, n.y - 17);
+  });
+
+  requestAnimationFrame(renderTown);
+}
+
+/* 토목 미니게임 */
+function updateBridgeAnim() {
+  if (!window.bridgeActive) return;
+
+  window.ptrPos += window.ptrDir;
+
+  if (window.ptrPos >= 92) {
+    window.ptrPos = 92;
+    window.ptrDir = -Math.abs(window.ptrDir);
+  } else if (window.ptrPos <= 2) {
+    window.ptrPos = 2;
+    window.ptrDir = Math.abs(window.ptrDir);
+  }
+
+  const el = document.getElementById('bridge-pointer');
+  if (el) el.style.left = window.ptrPos + '%';
+
+  window.bridgeAnimId = requestAnimationFrame(updateBridgeAnim);
+}
+
+function openCivilMinigame(type) {
+  Sound.pop();
+  const meta = CIVIL_META[type];
+  
+  if (gameState.gold < meta.cost) {
+    Sound.buzzer();
+    alert(`💰 공사 예산이 부족합니다!\n[${meta.name}] 시공에는 ${meta.cost}G가 필요합니다. (현재: ${gameState.gold}G)\n\n스토리(모드1)나 퀴즈(모드3)를 플레이하여 공사 예산을 확보해오세요!`);
+    return;
+  }
+
+  window.currentCivilType = type;
+  const modal = document.getElementById('action-modal');
+  const body = document.getElementById('modal-content');
+  modal.style.display = 'flex';
+
+  if (type === 'bridge') {
+    body.innerHTML = `
+      <h3>🌉 [토목] 다리 교각 세우기 미니게임</h3>
+      <p style="font-size:12px; color:#2563eb; margin:4px 0; font-weight:bold;">
+        💵 시공 예산: ${meta.cost}G (완공 시 정상 지출됩니다)
+      </p>
+      <p style="font-size:13px; margin:6px 0; color:#1e293b;">
+        넓디넓은 <strong>초록색 영역</strong>에 빨간 바늘이 왔을 때 버튼을 누르세요! (성공: 3회)
+      </p>
+      <div style="width:100%; height:36px; background:#cbd5e1; border:3px solid #1e293b; border-radius:8px; position:relative; overflow:hidden; margin:14px 0;">
+        <div style="position:absolute; left:30%; width:40%; height:100%; background:#86efac; border-left:3px solid #16a34a; border-right:3px solid #16a34a; display:flex; align-items:center; justify-content:center;">
+          <span style="font-size:12px; color:#166534; font-weight:bold;">SAFE ZONE 🎯</span>
+        </div>
+        <div id="bridge-pointer" style="position:absolute; left:6%; top:0; width:12px; height:100%; background:#ef4444; border-radius:2px; box-shadow:0 0 6px #000;"></div>
+      </div>
+      <div id="bridge-status" style="font-size:17px; margin-bottom:12px;">세운 기둥: <strong>0</strong> / 3</div>
+      <button class="btn-pix" id="btn-pillar" onclick="hitBridgePillar()">기둥 세우기 🔨</button>
+    `;
+    window.bridgeHits = 0;
+    window.ptrPos = 6;
+    window.ptrDir = 1.1;
+    window.bridgeActive = true;
+
+    if (window.bridgeAnimId) cancelAnimationFrame(window.bridgeAnimId);
+    window.bridgeAnimId = requestAnimationFrame(updateBridgeAnim);
+
+  } else if (type === 'road') {
+    body.innerHTML = `
+      <h3>🚜 [토목] 초고속 아스팔트 포장 챌린지</h3>
+      <p style="font-size:12px; color:#2563eb; margin:4px 0; font-weight:bold;">
+        💵 시공 예산: ${meta.cost}G (완공 시 정상 지출됩니다)
+      </p>
+      <p style="font-size:12px; margin:4px 0; color:#b91c1c;">
+        ⚠️ 쉬면 아스팔트가 굳습니다! 솟아나는 <strong>요철 바위(🪨)</strong>는 클릭해 깨부수세요!
+      </p>
+      <div id="roller-track" style="width:100%; height:110px; background:#334155; border:3px dashed #fef08a; border-radius:8px; position:relative; overflow:hidden; cursor:crosshair; display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px;">
+        <div id="rock-obstacle" style="position:absolute; font-size:32px; cursor:pointer; display:none; z-index:5;" onclick="smashRock(event)">🪨</div>
+        <span>🚜 좌우로 격렬하게 비비세요!</span>
+      </div>
+      <div style="font-size:16px; margin-top:10px;">
+        도로 포장률: <strong id="road-gauge" style="color:#2563eb; font-size:20px;">0</strong>%
+      </div>
+    `;
+    window.roadProgress = 0;
+    window.rockPresent = false;
+
+    if (window.roadCoolTimer) clearInterval(window.roadCoolTimer);
+    window.roadCoolTimer = setInterval(() => {
+      if (window.roadProgress > 0 && window.roadProgress < 100) {
+        window.roadProgress = Math.max(0, window.roadProgress - 0.7);
+        const gaugeEl = document.getElementById('road-gauge');
+        if (gaugeEl) gaugeEl.innerText = Math.round(window.roadProgress);
+      }
+    }, 100);
+
+    if (window.roadRockTimer) clearInterval(window.roadRockTimer);
+    window.roadRockTimer = setInterval(() => {
+      if (window.roadProgress < 90 && !window.rockPresent && Math.random() < 0.6) {
+        const rock = document.getElementById('rock-obstacle');
+        if (rock) {
+          rock.style.left = Math.floor(Math.random() * 75 + 10) + '%';
+          rock.style.top = Math.floor(Math.random() * 50 + 10) + '%';
+          rock.style.display = 'block';
+          window.rockPresent = true;
+          Sound.buzzer();
+        }
+      }
+    }, 1800);
+
+    const track = document.getElementById('roller-track');
+    const updateScratch = () => {
+      if (window.rockPresent) {
+        window.roadProgress = Math.max(0, window.roadProgress - 0.3);
+        const gaugeEl = document.getElementById('road-gauge');
+        if (gaugeEl) gaugeEl.innerText = Math.round(window.roadProgress);
+        return;
+      }
+      window.roadProgress += 1.5;
+      Sound.pop();
+      const gaugeEl = document.getElementById('road-gauge');
+      if (gaugeEl) gaugeEl.innerText = Math.min(100, Math.round(window.roadProgress));
+
+      if (window.roadProgress >= 100) {
+        clearInterval(window.roadCoolTimer);
+        clearInterval(window.roadRockTimer);
+        completeCivilStructure('road');
+      }
+    };
+    track.onmousemove = updateScratch;
+    track.ontouchmove = updateScratch;
+
+  } else if (type === 'dam') {
+    body.innerHTML = `
+      <h3>🚨 [토목] 댐 긴급 침수 방어 챌린지!</h3>
+      <p style="font-size:12px; color:#2563eb; margin:4px 0; font-weight:bold;">
+        💵 시공 예산: ${meta.cost}G (완공 시 정상 지출됩니다)
+      </p>
+      <p style="font-size:12px; margin:4px 0; color:#b91c1c;">
+        물구멍(💦)을 막지 못하면 <strong>수위(100%)</strong>가 차서 댐이 무너집니다! 빠르게 <strong>8개</strong>를 막으세요!
+      </p>
+      <div style="background:#e2e8f0; height:18px; border-radius:10px; overflow:hidden; border:2px solid #1e293b; margin:6px 0;">
+        <div id="dam-flood-bar" style="width:10%; height:100%; background:#ef4444; transition:width 0.1s;"></div>
+      </div>
+      <div id="dam-water-box" style="width:100%; height:150px; background:#3b82f6; border:3px solid #1e293b; border-radius:8px; position:relative; overflow:hidden; margin-top:8px;"></div>
+      <div style="font-size:16px; margin-top:8px;">막은 구멍: <strong id="dam-plugged-cnt" style="color:#10b981; font-size:20px;">0</strong> / 8</div>
+    `;
+    window.damHits = 0;
+    window.floodLevel = 10;
+
+    if (window.floodTimer) clearInterval(window.floodTimer);
+    window.floodTimer = setInterval(() => {
+      window.floodLevel += 1.6;
+      const bar = document.getElementById('dam-flood-bar');
+      if (bar) bar.style.width = Math.min(100, window.floodLevel) + '%';
+
+      if (window.floodLevel >= 100) {
+        clearInterval(window.floodTimer);
+        clearInterval(window.leakSpawnTimer);
+        Sound.collapse();
+        alert("💥 댐이 수압을 이기지 못하고 범람했습니다! 다시 도전하세요.");
+        openCivilMinigame('dam');
+      }
+    }, 150);
+
+    if (window.leakSpawnTimer) clearInterval(window.leakSpawnTimer);
+    window.leakSpawnTimer = setInterval(() => { spawnDamLeak(); }, 600);
+
+    spawnDamLeak();
+    spawnDamLeak();
+
+  } else if (type === 'rail') {
+    body.innerHTML = `
+      <h3>🚆 [토목] 리듬 레일 선로 깔기 액션!</h3>
+      <p style="font-size:12px; color:#2563eb; margin:4px 0; font-weight:bold;">
+        💵 시공 예산: ${meta.cost}G (완공 시 정상 지출됩니다)
+      </p>
+      <p style="font-size:13px; margin:6px 0; color:#1e293b;">
+        선로 블록이 <strong>노란색 타깃 상자</strong>에 들어왔을 때 딱 맞춰 망치를 치세요!
+      </p>
+      <div style="width:100%; height:140px; background:#451a03; border:3px solid #1e293b; border-radius:10px; position:relative; overflow:hidden; margin:10px 0;">
+        <div style="position:absolute; bottom:12px; left:calc(50% - 40px); width:80px; height:40px; border:3px dashed #facc15; background:rgba(250,204,21,0.25); border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:bold;">
+          타깃 존 🎯
+        </div>
+        <div id="falling-rail" style="position:absolute; top:0; left:calc(50% - 35px); width:70px; height:32px; background:#78350f; border:2px solid #fff; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px;">
+          🛤️
+        </div>
+      </div>
+      <div style="font-size:16px; margin-bottom:8px;">완성된 선로: <strong id="rail-success-cnt" style="color:#f59e0b; font-size:20px;">0</strong> / 4</div>
+      <button class="btn-pix" style="background:#d97706;" onclick="strikeRailBeat()">침목 망치질 🔨 STRIKE!</button>
+    `;
+    window.railSuccess = 0;
+    window.railY = 0;
+    window.railDropSpeed = 2.4;
+
+    if (window.railAnimLoop) clearInterval(window.railAnimLoop);
+    window.railAnimLoop = setInterval(() => {
+      window.railY += window.railDropSpeed;
+      const el = document.getElementById('falling-rail');
+      if (el) el.style.top = window.railY + 'px';
+
+      if (window.railY > 120) {
+        window.railY = 0;
+      }
+    }, 25);
+
+  } else if (type === 'tunnel') {
+    body.innerHTML = `
+      <h3>🚇 [토목] 다이너마이트 발파 & TBM 굴착!</h3>
+      <p style="font-size:12px; color:#2563eb; margin:4px 0; font-weight:bold;">
+        💵 시공 예산: ${meta.cost}G (완공 시 정상 지출됩니다)
+      </p>
+      <p style="font-size:12px; margin:4px 0; color:#b91c1c;">
+        암벽 3군데에 <strong>다이너마이트(🧨)를 설치</strong>한 후 [폭파 스위치]를 눌러 관통하세요!
+      </p>
+      <div id="tunnel-blast-zone" style="width:100%; height:130px; background:#1e293b; border:3px solid #1e293b; border-radius:10px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+        <div id="rock-face" style="font-size:60px; filter:drop-shadow(0 4px 0 #000);">⛰️⛰️⛰️</div>
+        <div id="dynamite-holder" style="position:absolute; display:flex; gap:20px;">
+          <button class="t-dynamite-slot" style="font-size:28px; background:#334155; border:2px dashed #f87171; border-radius:8px; padding:6px; cursor:pointer;" onclick="plantDynamite(this)">🧨설치</button>
+          <button class="t-dynamite-slot" style="font-size:28px; background:#334155; border:2px dashed #f87171; border-radius:8px; padding:6px; cursor:pointer;" onclick="plantDynamite(this)">🧨설치</button>
+          <button class="t-dynamite-slot" style="font-size:28px; background:#334155; border:2px dashed #f87171; border-radius:8px; padding:6px; cursor:pointer;" onclick="plantDynamite(this)">🧨설치</button>
+        </div>
+      </div>
+      <div style="font-size:15px; margin:8px 0;">설치된 폭약: <strong id="t-dyn-cnt" style="color:#ef4444; font-size:18px;">0</strong> / 3</div>
+      <button class="btn-pix" id="btn-detonate" style="background:#dc2626; opacity:0.5; pointer-events:none;" onclick="detonateTunnel()">🔥 점화 및 굴착 발파!</button>
+    `;
+    window.plantedDyn = 0;
+  }
+}
+
+function hitBridgePillar() {
+  if (window.ptrPos >= 30 && window.ptrPos <= 70) {
+    Sound.correct();
+    window.bridgeHits++;
+    document.getElementById('bridge-status').innerHTML = `세운 기둥: <strong style="color:#16a34a; font-size:20px;">${window.bridgeHits}</strong> / 3`;
+    if (window.bridgeHits >= 3) {
+      window.bridgeActive = false;
+      if (window.bridgeAnimId) cancelAnimationFrame(window.bridgeAnimId);
+      completeCivilStructure('bridge');
+    }
+  } else {
+    Sound.buzzer();
+    alert("바늘이 초록색 영역 안에 왔을 때 눌러주세요!");
+  }
+}
+
+function strikeRailBeat() {
+  if (window.railY >= 75 && window.railY <= 115) {
+    Sound.correct();
+    window.railSuccess++;
+    window.railY = 0;
+    document.getElementById('rail-success-cnt').innerText = window.railSuccess;
+
+    if (window.railSuccess >= 4) {
+      clearInterval(window.railAnimLoop);
+      completeCivilStructure('rail');
+    }
+  } else {
+    Sound.buzzer();
+  }
+}
+
+function plantDynamite(btn) {
+  if (btn.classList.contains('planted')) return;
+  Sound.pop();
+  btn.classList.add('planted');
+  btn.innerText = '💣 완료';
+  btn.style.background = '#fef08a';
+  btn.style.borderColor = '#b45309';
+  window.plantedDyn++;
+  document.getElementById('t-dyn-cnt').innerText = window.plantedDyn;
+
+  if (window.plantedDyn >= 3) {
+    const detonateBtn = document.getElementById('btn-detonate');
+    detonateBtn.style.opacity = '1';
+    detonateBtn.style.pointerEvents = 'auto';
+  }
+}
+
+function detonateTunnel() {
+  Sound.collapse();
+  const blastZone = document.getElementById('tunnel-blast-zone');
+  blastZone.style.background = '#f87171';
+  document.getElementById('rock-face').innerText = '💥🚇💥';
+  setTimeout(() => {
+    blastZone.style.background = '#1e293b';
+    completeCivilStructure('tunnel');
+  }, 500);
+}
+
+function smashRock(e) {
+  e.stopPropagation();
+  Sound.collapse();
+  window.rockPresent = false;
+  document.getElementById('rock-obstacle').style.display = 'none';
+}
+
+function spawnDamLeak() {
+  const box = document.getElementById('dam-water-box');
+  if (!box || window.damHits >= 8) return;
+  const currentLeaks = box.getElementsByClassName('leak-btn').length;
+  if (currentLeaks >= 4) return;
+
+  const btn = document.createElement('button');
+  btn.className = 'leak-btn';
+  btn.innerText = '💦';
+  btn.style.position = 'absolute';
+  btn.style.fontSize = '30px';
+  btn.style.background = 'none';
+  btn.style.border = 'none';
+  btn.style.cursor = 'pointer';
+  btn.style.left = Math.floor(Math.random() * 80 + 5) + '%';
+  btn.style.top = Math.floor(Math.random() * 70 + 10) + '%';
+  btn.onclick = function() {
+    Sound.pop();
+    this.remove();
+    window.damHits++;
+    window.floodLevel = Math.max(0, window.floodLevel - 7);
+    const pluggedEl = document.getElementById('dam-plugged-cnt');
+    if (pluggedEl) pluggedEl.innerText = window.damHits;
+
+    if (window.damHits >= 8) {
+      clearInterval(window.floodTimer);
+      clearInterval(window.leakSpawnTimer);
+      completeCivilStructure('dam');
+    }
+  };
+  box.appendChild(btn);
+}
+
+function completeCivilStructure(typeKey) {
+  const meta = CIVIL_META[typeKey];
+  Sound.correct();
+  
+  gameState.town[meta.key] = (gameState.town[meta.key] || 0) + 1;
+  gameState.gold -= meta.cost;
+  saveState();
+
+  const body = document.getElementById('modal-content');
+  body.innerHTML = `
+    <h2>🎉 [토목 구조물] ${meta.name} 준공 완료!</h2>
+    <div style="font-size:16px; color:#dc2626; font-weight:bold; margin:6px 0;">
+      💸 공사 예산: -${meta.cost}G 지출 완료 (누적: ${gameState.town[meta.key]}개)
+    </div>
+    <div style="font-size:46px; margin:8px 0;">🌉🚜🏗️</div>
+    <div style="background:#e0f2fe; border:2px solid #0284c7; padding:10px; border-radius:8px; font-size:13px; text-align:left; line-height:1.45;">
+      <strong>📘 [교과서 핵심: 건설 기술의 경제적 특성]</strong><br>
+      토목 구조물은 자연을 변화시켜 공공의 편리와 복지를 주는 소중한 시설이지만, <strong>완공까지 막대한 비용과 자원, 인력이 소모</strong>되므로 철저한 사전 타당성 검토가 필수입니다!
+    </div>
+    <button class="btn-pix" style="margin-top:12px;" onclick="closeModal()">마을 보기</button>
+  `;
+}
+
+function openArchCustomizer(type) {
+  Sound.pop();
+  const meta = {
+    apart: { name: "아파트", cost: 150, roof: "#3b82f6" },
+    house: { name: "단독 주택", cost: 90, roof: "#f59e0b" },
+    stadium: { name: "경기장", cost: 200, roof: "#10b981" },
+    school: { name: "초등학교", cost: 120, roof: "#ef4444" },
+    factory: { name: "산업 공장", cost: 130, roof: "#64748b" },
+    hospital: { name: "종합 병원", cost: 140, roof: "#06b6d4" },
+    shop: { name: "편의 상점", cost: 80, roof: "#ec4899" }
+  }[type];
+
+  if (gameState.gold < meta.cost) {
+    Sound.buzzer();
+    alert(`💰 건축 예산이 부족합니다!\n[${meta.name}] 건립에는 ${meta.cost}G가 필요합니다. (현재: ${gameState.gold}G)\n\n스토리나 퀴즈를 풀어 건축 자금을 확보해오세요!`);
+    return;
+  }
+
+  const modal = document.getElementById('action-modal');
+  const body = document.getElementById('modal-content');
+  modal.style.display = 'flex';
+
+  body.innerHTML = `
+    <h3>🏠 [건축] ${meta.name} 설계 및 건립</h3>
+    <p style="font-size:12px; color:#2563eb; margin:4px 0; font-weight:bold;">
+      💵 건축비: ${meta.cost}G
+    </p>
+    <div style="text-align:left; font-size:14px; margin:10px 0;">
+      <label>지붕 모양: </label>
+      <select id="sel-roof" style="padding:4px; font-family:'Jua';">
+        <option value="triangle">삼각 지붕 (전통미)</option>
+        <option value="arch">둥근 아치 지붕 (세련미)</option>
+        <option value="dome">웅장한 돔 지붕 (경기장/문화)</option>
+      </select><br><br>
+      <label>외벽 색상: </label>
+      <input type="color" id="sel-wall" value="#f8fafc"><br><br>
+      <label>간판 이름: </label>
+      <input type="text" id="sel-name" value="${meta.name}" style="padding:4px; font-family:'Jua'; width:140px;">
+    </div>
+    <button class="btn-pix" onclick="buildArchitecture(${meta.cost})">건물 착공하기 (비용 ${meta.cost}G)</button>
+    <button class="btn-pix" style="background:#94a3b8;" onclick="closeModal()">취소</button>
+  `;
+}
+
+function buildArchitecture(cost) {
+  gameState.gold -= cost;
+  const name = document.getElementById('sel-name').value;
+  const roof = document.getElementById('sel-roof').value;
+  const wall = document.getElementById('sel-wall').value;
+
+  gameState.town.buildings.push({
+    name: name,
+    roofShape: roof,
+    wallColor: wall,
+    roofColor: roof === 'arch' ? '#38bdf8' : (roof === 'dome' ? '#10b981' : '#ef4444')
+  });
+
+  Sound.correct();
+  saveState();
+
+  const body = document.getElementById('modal-content');
+  body.innerHTML = `
+    <h2>🏢 [건축 구조물] 준공 완료!</h2>
+    <div style="font-size:16px; color:#dc2626; font-weight:bold; margin:6px 0;">
+      💸 건축비: -${cost}G 지출 완료
+    </div>
+    <div style="font-size:46px; margin:8px 0;">🏫🎊</div>
+    <div style="background:#fef3c7; border:2px solid #f59e0b; padding:10px; border-radius:8px; font-size:13px; text-align:left; line-height:1.45;">
+      <strong>📘 [교과서 개념: 건축 구조물이란?]</strong><br>
+      집, 학교, 병원, 공장, 경기장처럼 <strong>생활 공간을 쾌적하고 안전하게 사용하기 위해 만든 구조물</strong>입니다!
+    </div>
+    <button class="btn-pix" style="margin-top:12px;" onclick="closeModal()">마을 보기</button>
+  `;
+}
+
+function closeModal() {
+  window.bridgeActive = false;
+  if (window.bridgeAnimId) cancelAnimationFrame(window.bridgeAnimId);
+  if (window.roadCoolTimer) clearInterval(window.roadCoolTimer);
+  if (window.roadRockTimer) clearInterval(window.roadRockTimer);
+  if (window.floodTimer) clearInterval(window.floodTimer);
+  if (window.leakSpawnTimer) clearInterval(window.leakSpawnTimer);
+  if (window.railAnimLoop) clearInterval(window.railAnimLoop);
+  document.getElementById('action-modal').style.display = 'none';
+}
+
+/* =========================================================================
+   5. MODE 3: 아케이드 퀴즈
+   ========================================================================= */
+const QUIZ_ITEMS = [
+  { name: "집 (단독 주택)", type: "arch", icon: "🏡", reason: "가족이 생활하는 주거 건축 공간" },
+  { name: "아파트", type: "arch", icon: "🏢", reason: "사람이 거주하는 대표 공동주택 건축 구조물" },
+  { name: "상점 (편의점/마트)", type: "arch", icon: "🏪", reason: "물건을 사고파는 상업 활동 건축 공간" },
+  { name: "산업 공장", type: "arch", icon: "🏭", reason: "제품을 생산하고 일하는 산업 건축 구조물" },
+  { name: "초등학교", type: "arch", icon: "🏫", reason: "학생들이 공부하고 활동하는 배움터 건축 공간" },
+  { name: "종합 병원", type: "arch", icon: "🏥", reason: "환자를 진료하고 치료하는 의료 건축 구조물" },
+  { name: "체육 경기장", type: "arch", icon: "🏟️", reason: "교과서 사진 속 운동 경기를 위한 대형 건축물" },
+  { name: "시립 도서관", type: "arch", icon: "📚", reason: "책을 읽고 학습하는 공공 문화 건축 구조물" },
+  { name: "고속도로", type: "civil", icon: "🛣️", reason: "자연 지형을 다듬어 만든 핵심 교통 토목 구조물" },
+  { name: "철도 (기찻길)", type: "civil", icon: "🚆", reason: "기차가 달릴 수 있도록 부설한 공공 교통 토목망" },
+  { name: "다리 (교량)", type: "civil", icon: "🌉", reason: "강이나 바다를 건너기 위해 자연을 연결한 토목 구조물" },
+  { name: "항만 (항구)", type: "civil", icon: "🚢", reason: "배를 정박하고 물류를 수송하는 해양 토목 시설" },
+  { name: "터널", type: "civil", icon: "🚇", reason: "산이나 지하를 뚫어 길을 낸 대표 토목 인프라" },
+  { name: "댐 (수력 발전댐)", type: "civil", icon: "🌊", reason: "물길을 막아 수자원을 이용하고 홍수를 막는 토목 시설" }
+];
+
+let arcadeScore = 0;
+let arcadeCombo = 0;
+let arcadeTime = 60;
+let arcadeRunning = false;
+let arcadeTimerId = null;
+let arcadeAnimId = null;
+let currentCard = null;
+let cardY = 30;
+let wrongNotes = [];
+
+function startArcadeGame() {
+  arcadeScore = 0;
+  arcadeCombo = 0;
+  arcadeTime = 60;
+  arcadeRunning = true;
+  wrongNotes = [];
+  updateArcadeHUD();
+  spawnArcadeCard();
+
+  if (arcadeTimerId) clearInterval(arcadeTimerId);
+  arcadeTimerId = setInterval(() => {
+    arcadeTime--;
+    document.getElementById('arcade-time').innerText = arcadeTime;
+    if (arcadeTime <= 0) endArcadeGame();
+  }, 1000);
+
+  if (arcadeAnimId) cancelAnimationFrame(arcadeAnimId);
+  arcadeAnimId = requestAnimationFrame(arcadeFallLoop);
+}
+
+function stopArcadeGame() {
+  arcadeRunning = false;
+  if (arcadeTimerId) clearInterval(arcadeTimerId);
+  if (arcadeAnimId) cancelAnimationFrame(arcadeAnimId);
+}
+
+function updateArcadeHUD() {
+  document.getElementById('arcade-combo').innerText = arcadeCombo;
+  document.getElementById('arcade-score').innerText = arcadeScore;
+}
+
+function spawnArcadeCard() {
+  currentCard = QUIZ_ITEMS[Math.floor(Math.random() * QUIZ_ITEMS.length)];
+  document.getElementById('arcade-card-name').innerText = currentCard.name;
+  document.getElementById('arcade-card-icon').innerText = currentCard.icon;
+  cardY = 30;
+  const el = document.getElementById('arcade-card');
+  if (el) el.style.top = cardY + 'px';
+}
+
+function arcadeFallLoop() {
+  if (!arcadeRunning) return;
+
+  cardY += 1.7 + (arcadeCombo * 0.1);
+  const el = document.getElementById('arcade-card');
+  if (el) el.style.top = cardY + 'px';
+
+  if (cardY > 380) {
+    sortCard('timeout');
+  }
+
+  arcadeAnimId = requestAnimationFrame(arcadeFallLoop);
+}
+
+function sortCard(choice) {
+  if (!arcadeRunning || !currentCard) return;
+
+  if (choice === currentCard.type) {
+    Sound.correct();
+    arcadeCombo++;
+    const mult = arcadeCombo >= 5 ? 2 : 1;
+    arcadeScore += 100 * mult;
+    gameState.gold += 15 * mult;
+  } else {
+    Sound.buzzer();
+    arcadeCombo = 0;
+    arcadeScore = Math.max(0, arcadeScore - 100);
+
+    const overlay = document.getElementById('error-flash-overlay');
+    overlay.style.display = 'flex';
+    setTimeout(() => { overlay.style.display = 'none'; }, 650);
+
+    wrongNotes.push({
+      name: currentCard.name,
+      userChoice: choice === 'arch' ? '건축 구조물' : (choice === 'civil' ? '토목 구조물' : '시간 초과 ⏳'),
+      correctChoice: currentCard.type === 'arch' ? '건축 구조물' : '토목 구조물',
+      reason: currentCard.reason
+    });
+  }
+
+  saveState();
+  updateArcadeHUD();
+  spawnArcadeCard();
+}
+
+function endArcadeGame() {
+  stopArcadeGame();
+  Sound.correct();
+
+  let grade = "C";
+  if (arcadeScore >= 2400) grade = "S (전설의 건축사) 👑";
+  else if (arcadeScore >= 1600) grade = "A (우수 감리소장) 🥇";
+  else if (arcadeScore >= 900) grade = "B (성실 시공자) 🥈";
+
+  const modal = document.getElementById('action-modal');
+  const body = document.getElementById('modal-content');
+  modal.style.display = 'flex';
+
+  let reviewHtml = "";
+  if (wrongNotes.length === 0) {
+    reviewHtml = `<p style="color:#10b981; font-weight:bold; margin-top:8px;">🎉 교과서 예시 문제 100점 만점 마스터!</p>`;
+  } else {
+    reviewHtml = `
+      <div style="text-align:left; background:#fee2e2; border:2px solid #ef4444; border-radius:8px; padding:10px; margin-top:10px; max-height:160px; overflow-y:auto; font-size:12px; line-height:1.4;">
+        <strong>📝 [내가 틀린 교과서 오답노트]:</strong><br>
+        ${wrongNotes.map((w, i) => `
+          <div style="border-bottom:1px dashed #cbd5e1; padding:4px 0;">
+            ${i+1}. ❌ <strong>[${w.name}]</strong><br>
+            - 당신의 선택: <span style="color:#b91c1c;">${w.userChoice}</span> / 정답: <strong>${w.correctChoice}</strong><br>
+            - 해설: ${w.reason}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  body.innerHTML = `
+    <h2>🏁 게임 종료! 결과 보고서</h2>
+    <div style="font-size:18px; margin:8px 0;">
+      최종 점수: <strong style="color:#b45309;">${arcadeScore}점</strong><br>
+      최종 등급: <strong>${grade}</strong>
+    </div>
+    ${reviewHtml}
+    <button class="btn-pix" style="margin-top:12px;" onclick="closeModal(); startArcadeGame();">🔥 다시 도전하기</button>
+  `;
+}
+
+window.addEventListener('keydown', (e) => {
+  if (!document.getElementById('mode3').classList.contains('active')) return;
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') sortCard('arch');
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') sortCard('civil');
+});
+
+/* =========================================================================
+   초기화 구동
+   ========================================================================= */
+loadState();
+renderStory();
+</script>
+</body>
+</html>
